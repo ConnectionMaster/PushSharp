@@ -58,7 +58,7 @@ namespace PushSharp.Apple
 
 			DeviceToken = deviceToken;
 			Payload = new AppleNotificationPayload();
-			
+
 			Identifier = GetNextIdentifier();
 		}
 
@@ -73,11 +73,11 @@ namespace PushSharp.Apple
 			Identifier = GetNextIdentifier();
 		}
 
-        public override bool IsValidDeviceRegistrationId()
-        {
-            Regex r = new Regex(@"^[0-9A-F]+$", RegexOptions.IgnoreCase);
-            return r.Match(this.DeviceToken).Success;
-        }
+		public override bool IsValidDeviceRegistrationId()
+		{
+			var r = new System.Text.RegularExpressions.Regex(@"^[0-9A-F]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+			return r.Match(this.DeviceToken).Success;
+		}
 
 		public override string ToString()
 		{

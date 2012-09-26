@@ -11,8 +11,8 @@ namespace PushSharp.Common
 
 
         /// <summary>
-        /// Gets or sets the tag. Can use to store miscellaneous information 
-        /// you might need in a event you subscribe to. 
+        /// Gets or sets the tag. Can use to store miscellaneous information
+        /// you might need in a event you subscribe to.
         /// </summary>
         /// <value>
         /// The tag.
@@ -26,6 +26,12 @@ namespace PushSharp.Common
 		/// </summary>
 		public int QueuedCount { get; set; }
 
-        public abstract bool IsValidDeviceRegistrationId();
+		/// <summary>
+		/// Does the message have a valid registration Id from what we can check client side?
+		/// </summary>
+		public virtual bool IsValidDeviceRegistrationId()
+		{
+			return true;
+		}
 	}
 }

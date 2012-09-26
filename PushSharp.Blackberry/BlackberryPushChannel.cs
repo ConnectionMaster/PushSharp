@@ -12,10 +12,9 @@ namespace PushSharp.Blackberry
 	{
 		BlackberryPushChannelSettings blackberrySettings = null;
 
-        public BlackberryPushChannel(Common.PushChannelSettings settings, PushServiceSettings serviceSettings = null)
-			: base(settings, serviceSettings)
+		public BlackberryPushChannel(BlackberryPushChannelSettings channelSettings, Common.PushServiceSettings serviceSettings = null) : base(channelSettings, serviceSettings)
 		{
-			blackberrySettings = settings as BlackberryPushChannelSettings;
+			blackberrySettings = channelSettings;
 		}
 
 		protected override void SendNotification(Common.Notification notification)
@@ -57,7 +56,7 @@ namespace PushSharp.Blackberry
 
 				// *************************
 				HttpWReq.Credentials = new NetworkCredential(blackberrySettings.PushUsername, blackberrySettings.PushPassword);
-				
+
 				requestStream = HttpWReq.GetRequestStream();
 				//Write the data from the source
 				requestStream.Write(bytes, 0, bytes.Length);
@@ -81,7 +80,7 @@ namespace PushSharp.Blackberry
 				HttpWRes.Close();
 				requestStream.Close();
 			}
-			catch (System.Exception e)
+			catch (System.Exception)
 			{
 				success = false;
 			}

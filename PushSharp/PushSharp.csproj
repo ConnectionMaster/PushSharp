@@ -10,9 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PushSharp</RootNamespace>
     <AssemblyName>PushSharp</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -68,6 +66,10 @@
     <ProjectReference Include="..\PushSharp.WindowsPhone\PushSharp.WindowsPhone.csproj">
       <Project>{9947F510-BA9A-4045-A648-BAB687D8F513}</Project>
       <Name>PushSharp.WindowsPhone</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PushSharp.Windows\PushSharp.Windows.csproj">
+      <Project>{0ec3a31e-b869-4465-abdc-90c2e3ccc17d}</Project>
+      <Name>PushSharp.Windows</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

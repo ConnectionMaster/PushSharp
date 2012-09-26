@@ -20,7 +20,7 @@ namespace PushSharp.Apple
 		private const string hostProduction = "gateway.push.apple.com";
 		private const int initialReconnectDelay = 3000;
 		#endregion
-				
+
 		public delegate void ConnectingDelegate(string host, int port);
 		public event ConnectingDelegate OnConnecting;
 
@@ -37,18 +37,11 @@ namespace PushSharp.Apple
 		ApplePushChannelSettings appleSettings = null;
 		List<SentNotification> sentNotifications = new List<SentNotification>();
 
-        public ApplePushChannel(ApplePushChannelSettings settings, PushServiceSettings serviceSettings = null)
-            : base(settings, serviceSettings)
+		public ApplePushChannel(ApplePushChannelSettings channelSettings, PushServiceSettings serviceSettings = null) : base(channelSettings, serviceSettings)
 		{
-			this.appleSettings = settings as ApplePushChannelSettings;
+			this.appleSettings = channelSettings;
 
-			//Need to load the private key seperately from apple
-			// Fixed by danielgindi@gmail.com :
-			//      The default is UserKeySet, which has caused internal encryption errors,
-			//      Because of lack of permissions on most hosting services.
-			//      So MachineKeySet should be used instead.
-			certificate = new X509Certificate2(settings.CertificateData, settings.CertificateFilePassword, 
-				X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+			certificate = this.appleSettings.Certificate;
 
 			certificates = new X509CertificateCollection();
 			certificates.Add(certificate);
@@ -63,17 +56,17 @@ namespace PushSharp.Apple
 		object streamWriteLock = new object();
 		int reconnectDelay = 3000;
 		float reconnectBackoffMultiplier = 1.5f;
-		
+
 		byte[] readBuffer = new byte[6];
 		bool connected = false;
-		
+
 		X509Certificate certificate;
 		X509CertificateCollection certificates;
 		TcpClient client;
 		SslStream stream;
 		System.IO.Stream networkStream;
 		Task taskCleanup;
-		
+
 		protected override void SendNotification(Common.Notification notification)
 		{
 			var appleNotification = notification as AppleNotification;
@@ -96,8 +89,8 @@ namespace PushSharp.Apple
 			if (isOkToSend)
 			{
 				Connect();
-				
-				try 
+
+				try
 				{
 					lock (streamWriteLock)
 					{
@@ -109,9 +102,9 @@ namespace PushSharp.Apple
 						}
 					}
 				}
-				catch (Exception ex)
-				{ 
-					this.QueueNotification(notification); 
+				catch (Exception)
+				{
+					this.QueueNotification(notification);
 				} //If this failed, we probably had a networking error, so let's requeue the notification
 			}
 		}
@@ -137,7 +130,7 @@ namespace PushSharp.Apple
 			//Wait on our tasks for a maximum of 30 seconds
 			Task.WaitAll(new Task[] { base.taskSender, taskCleanup }, 30000);
 		}
-		
+
 		void Reader()
 		{
 			try
@@ -211,7 +204,7 @@ namespace PushSharp.Apple
 
 									//Now clear out the sent list since we processed them all manually above
 									sentNotifications.Clear();
-								} 
+								}
 
 								//Start reading again
 								Reader();
@@ -227,7 +220,7 @@ namespace PushSharp.Apple
 						}
 
 					} // End Lock
-					
+
 				}), null);
 			}
 			catch
@@ -238,10 +231,10 @@ namespace PushSharp.Apple
 
 		void Cleanup()
 		{
-			bool wasRemoved = false;
-
 			while (true)
 			{
+				bool wasRemoved = false;
+
 				lock (sentLock)
 				{
 					//See if anything is here to process
@@ -302,7 +295,7 @@ namespace PushSharp.Apple
 						cf(ex);
 
 					//Raise a channel exception
-					this.Events.RaiseChannelException(ex);
+					this.Events.RaiseChannelException(ex, PlatformType.Apple);
 				}
 
 				if (!connected)
@@ -369,8 +362,8 @@ namespace PushSharp.Apple
 
 				try
 				{
-					//stream.AuthenticateAsClient(this.appleSettings.Host, this.certificates, System.Security.Authentication.SslProtocols.Ssl3, false);
-					stream.AuthenticateAsClient(this.appleSettings.Host);
+					stream.AuthenticateAsClient(this.appleSettings.Host, this.certificates, System.Security.Authentication.SslProtocols.Ssl3, false);
+					//stream.AuthenticateAsClient(this.appleSettings.Host);
 				}
 				catch (System.Security.Authentication.AuthenticationException ex)
 				{
@@ -385,11 +378,11 @@ namespace PushSharp.Apple
 
 				networkStream = stream;
 			}
-			
+
 			//Start reading from the stream asynchronously
 			Reader();
 		}
-		
+
 	}
 
 	public class SentNotification

@@ -11,10 +11,9 @@ namespace PushSharp.WindowsPhone
 	{
 		WindowsPhonePushChannelSettings windowsPhoneSettings;
 
-        public WindowsPhonePushChannel(WindowsPhonePushChannelSettings settings, PushServiceSettings serviceSettings = null)
-			: base(settings,serviceSettings)
+		public WindowsPhonePushChannel(WindowsPhonePushChannelSettings channelSettings, PushServiceSettings serviceSettings = null) : base(channelSettings, serviceSettings)
 		{
-			windowsPhoneSettings = settings;
+			windowsPhoneSettings = channelSettings;
 		}
 
 		protected override void SendNotification(Notification notification)
@@ -97,7 +96,7 @@ namespace PushSharp.WindowsPhone
 
 			var wr = (HttpWebRequest)objs[0];
 			var wpNotification = (WindowsPhoneNotification)objs[1];
-			
+
 			var resp = wr.EndGetResponse(asyncResult) as HttpWebResponse;
 
 			var status = ParseStatus(resp, wpNotification);
@@ -144,7 +143,7 @@ namespace PushSharp.WindowsPhone
 				Events.RaiseNotificationSent(status.Notification);
 				return;
 			}
-			
+
 			Events.RaiseNotificationSendFailure(status.Notification, new WindowsPhoneNotificationSendFailureException(status));
 		}
 	}
