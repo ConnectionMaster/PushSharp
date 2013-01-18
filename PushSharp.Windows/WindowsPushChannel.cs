@@ -22,6 +22,11 @@ namespace PushSharp.Windows
 			this.channelSettings = channelSettings;
 		}
 
+        public override PlatformType PlatformType
+        {
+            get { return Common.PlatformType.Windows; }
+        }
+
 		void RenewAccessToken()
 		{
 			var postData = new StringBuilder();
@@ -182,7 +187,7 @@ namespace PushSharp.Windows
 			result.HttpStatus = resp.StatusCode;
 
 			var wnsDebugTrace = resp.Headers["X-WNS-Debug-Trace"];
-			var wnsDeviceConnectionStatus = resp.Headers["X-WNS-DeviceConnectionStatus"];
+			var wnsDeviceConnectionStatus = resp.Headers["X-WNS-DeviceConnectionStatus"] ?? "connected";
 			var wnsErrorDescription = resp.Headers["X-WNS-Error-Description"];
 			var wnsMsgId = resp.Headers["X-WNS-Msg-ID"];
 			var wnsNotificationStatus = resp.Headers["X-WNS-NotificationStatus"];

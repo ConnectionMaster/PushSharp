@@ -8,7 +8,7 @@ using PushSharp.Common;
 
 namespace PushSharp.Blackberry
 {
-	public class BlackberryPushChannel : Common.PushChannelBase
+	public class BlackberryPushChannel : PushChannelBase
 	{
 		BlackberryPushChannelSettings blackberrySettings = null;
 
@@ -16,8 +16,13 @@ namespace PushSharp.Blackberry
 		{
 			blackberrySettings = channelSettings;
 		}
-
-		protected override void SendNotification(Common.Notification notification)
+        
+        public override PlatformType PlatformType
+        {
+            get { return PlatformType.Blackberry; }
+        }
+        
+		protected override void SendNotification(Notification notification)
 		{
 			var bbn = notification as BlackberryNotification;
 
