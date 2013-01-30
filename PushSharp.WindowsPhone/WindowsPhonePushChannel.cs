@@ -29,7 +29,7 @@ namespace PushSharp.WindowsPhone
 			var wr = HttpWebRequest.Create(wpNotification.EndPointUrl) as HttpWebRequest;
 			wr.ContentType = "text/xml";
 			wr.Method = "POST";
-			
+
 			var immediateValue = 3;
 			var mediumValue = 13;
 			var slowValue = 23;
@@ -59,9 +59,9 @@ namespace PushSharp.WindowsPhone
 				else if (wpNotification.NotificationClass.Value == BatchingInterval.Slow)
 					val = slowValue;
 			}
-			
+
 			wr.Headers.Add("X-NotificationClass", val.ToString());
-			
+
 			if (wpNotification is WindowsPhoneToastNotification)
 				wr.Headers.Add("X-WindowsPhone-Target", "toast");
             else if (wpNotification is WindowsPhoneTileNotification ||
@@ -110,7 +110,7 @@ namespace PushSharp.WindowsPhone
 
 			var wr = (HttpWebRequest)objs[0];
 			var wpNotification = (WindowsPhoneNotification)objs[1];
-			
+
 			var resp = wr.EndGetResponse(asyncResult) as HttpWebResponse;
 
 			var status = ParseStatus(resp, wpNotification);
@@ -148,9 +148,9 @@ namespace PushSharp.WindowsPhone
 
 			return result;
 		}
-		
+
 		void HandleStatus(WindowsPhoneMessageStatus status, WindowsPhoneNotification notification = null)
-		{	
+		{
 			if (status.SubscriptionStatus == WPSubscriptionStatus.Expired)
 			{
 				this.Events.RaiseDeviceSubscriptionExpired(PlatformType.WindowsPhone, notification.EndPointUrl, notification);
@@ -164,7 +164,7 @@ namespace PushSharp.WindowsPhone
 				this.Events.RaiseNotificationSent(status.Notification);
 				return;
 			}
-			
+
 			this.Events.RaiseNotificationSendFailure(status.Notification, new WindowsPhoneNotificationSendFailureException(status));
 		}
 	}

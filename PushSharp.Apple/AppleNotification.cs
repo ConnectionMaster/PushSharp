@@ -5,6 +5,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.ServiceModel.Web;
 
 namespace PushSharp.Apple
@@ -57,7 +58,7 @@ namespace PushSharp.Apple
 
 			DeviceToken = deviceToken;
 			Payload = new AppleNotificationPayload();
-			
+
 			Identifier = GetNextIdentifier();
 		}
 

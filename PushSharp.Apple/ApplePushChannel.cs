@@ -20,7 +20,7 @@ namespace PushSharp.Apple
 		private const string hostProduction = "gateway.push.apple.com";
 		private const int initialReconnectDelay = 3000;
 		#endregion
-				
+
 		public delegate void ConnectingDelegate(string host, int port);
 		public event ConnectingDelegate OnConnecting;
 
@@ -76,10 +76,10 @@ namespace PushSharp.Apple
 		object streamWriteLock = new object();
 		int reconnectDelay = 3000;
 		float reconnectBackoffMultiplier = 1.5f;
-		
+
 		byte[] readBuffer = new byte[6];
 		bool connected = false;
-		
+
 		X509Certificate certificate;
 		X509CertificateCollection certificates;
 		TcpClient client;
@@ -122,7 +122,7 @@ namespace PushSharp.Apple
 					isOkToSend = false;
 
 					Interlocked.Decrement(ref trackedNotificationCount);
-					
+
 					this.Events.RaiseNotificationSendFailure(notification, nfex);
 				}
 
@@ -147,7 +147,7 @@ namespace PushSharp.Apple
 					{
 						//If this failed, we probably had a networking error, so let's requeue the notification
 						this.QueueNotification(notification, true, true);
-					} 
+					}
 				}
 			}
 		}
@@ -166,7 +166,7 @@ namespace PushSharp.Apple
 				while (QueuedNotificationCount > 0 || sentNotificationCount > 0 || Interlocked.Read(ref trackedNotificationCount) > 0)
 				{
 					Thread.Sleep(100);
-	
+
 					lock (sentLock)
 						sentNotificationCount = sentNotifications.Count;
 				}
@@ -178,7 +178,7 @@ namespace PushSharp.Apple
 			//Wait on our tasks for a maximum of 5 seconds
 			Task.WaitAll(new Task[] { base.taskSender, taskCleanup }, 5000);
 		}
-		
+
 		void Reader()
 		{
 			try
@@ -208,7 +208,7 @@ namespace PushSharp.Apple
 								var identifier = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(readBuffer, 2));
 
 								HandleFailedNotification(identifier, status);
-								
+
 								//Start reading again
 								Reader();
 							}
@@ -223,7 +223,7 @@ namespace PushSharp.Apple
 						}
 
 					} // End Lock
-					
+
 				}), null);
 			}
 			catch
@@ -236,18 +236,18 @@ namespace PushSharp.Apple
 		{
 			//Get the index of our failed notification (by identifier)
 			var failedIndex = sentNotifications.FindIndex(n => n.Identifier == identifier);
-			
+
 			if (failedIndex < 0)
 				return;
 
 			//Get the failed notification itself
 			var failedNotification = sentNotifications[failedIndex];
-			
+
 			//Fail and remove the failed index from the list
 			Interlocked.Decrement(ref trackedNotificationCount);
 			this.Events.RaiseNotificationSendFailure(failedNotification.Notification, new NotificationFailureException(status, failedNotification.Notification));
 			sentNotifications.RemoveAt(failedIndex);
-			
+
 			//All Notifications after the failed one have been shifted back one space now
 			//Grab all the notifications from the list that are after the failed index
 			var toRequeue = sentNotifications.GetRange(failedIndex, sentNotifications.Count - (failedIndex + 1)).ToList();
@@ -259,7 +259,7 @@ namespace PushSharp.Apple
 			//Also ignore that the channel is stopping
 			foreach (var n in toRequeue)
 				this.QueueNotification(n.Notification, false, true);
-			
+
 		}
 
 		void Cleanup()
@@ -287,7 +287,7 @@ namespace PushSharp.Apple
 							if (n.SentAt < DateTime.UtcNow.AddMilliseconds(-1 * appleSettings.MillisecondsToWaitBeforeMessageDeclaredSuccess))
 							{
 								wasRemoved = true;
-								
+
 								Interlocked.Decrement(ref trackedNotificationCount);
 
 								this.Events.RaiseNotificationSent(n.Notification);
@@ -417,11 +417,11 @@ namespace PushSharp.Apple
 
 				networkStream = stream;
 			}
-			
+
 			//Start reading from the stream asynchronously
 			Reader();
 		}
-		
+
 	}
 
 	public class SentNotification

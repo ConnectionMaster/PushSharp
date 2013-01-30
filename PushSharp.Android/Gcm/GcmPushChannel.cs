@@ -15,12 +15,12 @@ namespace PushSharp.Android
 		GcmMessageTransportAsync transport;
 		long waitCounter = 0;
 
-		public GcmPushChannel(GcmPushChannelSettings channelSettings, PushServiceSettings serviceSettings = null) : base(channelSettings, serviceSettings) 
+		public GcmPushChannel(GcmPushChannelSettings channelSettings, PushServiceSettings serviceSettings = null) : base(channelSettings, serviceSettings)
 		{
 			gcmSettings = channelSettings;
-			
+
 			transport = new GcmMessageTransportAsync();
-			
+
 			transport.MessageResponseReceived += new Action<GcmMessageTransportResponse>(transport_MessageResponseReceived);
 
 			transport.UnhandledException += new Action<GcmNotification, Exception>(transport_UnhandledException);
@@ -58,7 +58,7 @@ namespace PushSharp.Android
 				if (r.ResponseStatus == GcmMessageTransportResponseStatus.Ok)
 				{
 					//It worked! Raise success
-					this.Events.RaiseNotificationSent(singleResultNotification); 
+					this.Events.RaiseNotificationSent(singleResultNotification);
 				}
 				else if (r.ResponseStatus == GcmMessageTransportResponseStatus.CanonicalRegistrationId)
 				{

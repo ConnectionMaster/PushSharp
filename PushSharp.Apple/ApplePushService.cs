@@ -33,7 +33,6 @@ namespace PushSharp.Apple
 
 					//Timer will run first after 10 seconds, then every 10 minutes to get feedback!
 				}), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(appleChannelSettings.FeedbackIntervalMinutes));
-
 			}
 		}
 
@@ -44,6 +43,7 @@ namespace PushSharp.Apple
 
 		protected override Common.PushChannelBase CreateChannel(Common.PushChannelSettings channelSettings)
 		{
+
 			return new ApplePushChannel(channelSettings as ApplePushChannelSettings);
 		}
 

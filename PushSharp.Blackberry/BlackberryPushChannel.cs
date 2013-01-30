@@ -61,7 +61,7 @@ namespace PushSharp.Blackberry
 
 				// *************************
 				HttpWReq.Credentials = new NetworkCredential(blackberrySettings.PushUsername, blackberrySettings.PushPassword);
-				
+
 				requestStream = HttpWReq.GetRequestStream();
 				//Write the data from the source
 				requestStream.Write(bytes, 0, bytes.Length);

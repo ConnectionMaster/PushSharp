@@ -102,7 +102,7 @@ namespace PushSharp
 			bbService = new Blackberry.BlackberryPushService(channelSettings, serviceSettings);
 			bbService.Events.RegisterProxyHandler(this.Events);
 		}
-		
+
 		public void StopBlackberryPushService(bool waitForQueueToFinish = true)
 		{
 			if (bbService != null)
@@ -163,5 +163,5 @@ namespace PushSharp
 		{
 			StopAllServices(false);
 		}
-	}	
+	}
 }

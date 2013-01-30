@@ -15,7 +15,7 @@ namespace PushSharp.Common
 	public abstract class PushChannelBase : IDisposable
 	{
 		public ChannelEvents Events = new ChannelEvents();
-		
+
 		public PushChannelSettings ChannelSettings { get; private set; }
 		public PushServiceSettings ServiceSettings { get; private set; }
 
@@ -41,7 +41,7 @@ namespace PushSharp.Common
 			this.CancelToken = CancelTokenSource.Token;
 
 			this.queuedNotifications = new ConcurrentQueue<Notification>();
-		
+
 			this.ChannelSettings = channelSettings;
 			this.ServiceSettings = serviceSettings ?? new PushServiceSettings();
 			this.waitQueuedNotification = new ManualResetEventSlim();

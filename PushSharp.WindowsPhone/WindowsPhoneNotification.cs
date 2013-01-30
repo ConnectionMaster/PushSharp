@@ -59,6 +59,11 @@ namespace PushSharp.WindowsPhone
 		{
 			return new WindowsPhoneIconicTile();
 		}
+
+        public override bool IsValidDeviceRegistrationId()
+        {
+            return true;
+        }
 	}
 
 	public abstract class WindowsPhoneNotification : Common.Notification
@@ -92,6 +97,11 @@ namespace PushSharp.WindowsPhone
 		{
 			return System.Security.SecurityElement.Escape(text);
 		}
+
+        public override bool IsValidDeviceRegistrationId()
+        {
+            return true;
+        }
 	}
 
 	public class WindowsPhoneToastNotification : WindowsPhoneNotification
@@ -115,7 +125,6 @@ namespace PushSharp.WindowsPhone
 
 			if (!string.IsNullOrEmpty(Text2))
 				toast.Add(new XElement(wp + "Text2", XmlEncode(Text2)));
-
 
 			if (this.OSVersion > WindowsPhoneDeviceOSVersion.Seven)
 			{
@@ -277,42 +286,42 @@ namespace PushSharp.WindowsPhone
 				tile.Add(new XElement(wp + "BackTitle", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(BackTitle))
 				tile.Add(new XElement(wp + "BackTitle", XmlEncode(BackTitle)));
-			
+
 			if (ClearBackContent)
 				tile.Add(new XElement(wp + "BackContent", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(BackContent))
 				tile.Add(new XElement(wp + "BackContent", XmlEncode(BackContent)));
-			
+
 			if (ClearWideBackContent)
 				tile.Add(new XElement(wp + "WideBackContent", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(WideBackContent))
 				tile.Add(new XElement(wp + "WideBackContent", XmlEncode(WideBackContent)));
-			
+
 			if (ClearCount)
 				tile.Add(new XElement(wp + "Count", new XAttribute("Action", "Clear")));
 			else if (Count.HasValue)
 				tile.Add(new XElement(wp + "Count", XmlEncode(Count.Value.ToString())));
-			
+
 			if (ClearSmallBackgroundImage)
 				tile.Add(new XElement(wp + "SmallBackgroundImage", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(SmallBackgroundImage))
 				tile.Add(new XElement(wp + "SmallBackgroundImage", XmlEncode(SmallBackgroundImage)));
-			
+
 			if (ClearBackgroundImage)
 				tile.Add(new XElement(wp + "BackgroundImage", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(BackgroundImage))
 				tile.Add(new XElement(wp + "BackgroundImage", XmlEncode(BackgroundImage)));
-			
+
 			if (ClearBackBackgroundImage)
 				tile.Add(new XElement(wp + "BackBackgroundImage", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(BackBackgroundImage))
 				tile.Add(new XElement(wp + "BackBackgroundImage", XmlEncode(BackBackgroundImage)));
-			
+
 			if (ClearWideBackgroundImage)
 				tile.Add(new XElement(wp + "WideBackgroundImage", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(WideBackgroundImage))
 				tile.Add(new XElement(wp + "WideBackgroundImage", XmlEncode(WideBackgroundImage)));
-			
+
 			if (ClearWideBackBackgroundImage)
 				tile.Add(new XElement(wp + "WideBackBackgroundImage", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(WideBackBackgroundImage))
@@ -323,7 +332,7 @@ namespace PushSharp.WindowsPhone
 			return notification.ToString();
 		}
 	}
-	
+
 	public class WindowsPhoneIconicTile : WindowsPhoneNotification
 	{
 		public string Title { get; set; }
@@ -352,7 +361,7 @@ namespace PushSharp.WindowsPhone
 		public string BackgroundColor { get; set; }
 		public bool ClearBackgroundColor { get; set; }
 
-		
+
 		public override string PayloadToString()
 		{
 			XNamespace wp = "WPNotification";
@@ -427,7 +436,7 @@ namespace PushSharp.WindowsPhone
 
 		public string CycleImage3 { get; set; }
 		public bool ClearCycleImage3 { get; set; }
-		
+
 		public string CycleImage4 { get; set; }
 		public bool ClearCycleImage4 { get; set; }
 
@@ -475,37 +484,37 @@ namespace PushSharp.WindowsPhone
 				tile.Add(new XElement(wp + "CycleImage2", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage2))
 				tile.Add(new XElement(wp + "CycleImage2", XmlEncode(CycleImage2)));
-			
+
 			if (ClearCycleImage3)
 				tile.Add(new XElement(wp + "CycleImage3", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage3))
 				tile.Add(new XElement(wp + "CycleImage3", XmlEncode(CycleImage3)));
-			
+
 			if (ClearCycleImage4)
 				tile.Add(new XElement(wp + "CycleImage4", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage4))
 				tile.Add(new XElement(wp + "CycleImage4", XmlEncode(CycleImage4)));
-			
+
 			if (ClearCycleImage5)
 				tile.Add(new XElement(wp + "CycleImage5", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage5))
 				tile.Add(new XElement(wp + "CycleImage5", XmlEncode(CycleImage5)));
-		
+
 			if (ClearCycleImage6)
 				tile.Add(new XElement(wp + "CycleImage6", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage6))
 				tile.Add(new XElement(wp + "CycleImage6", XmlEncode(CycleImage6)));
-			
+
 			if (ClearCycleImage7)
 				tile.Add(new XElement(wp + "CycleImage7", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage7))
 				tile.Add(new XElement(wp + "CycleImage7", XmlEncode(CycleImage7)));
-			
+
 			if (ClearCycleImage8)
 				tile.Add(new XElement(wp + "CycleImage8", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage8))
 				tile.Add(new XElement(wp + "CycleImage8", XmlEncode(CycleImage8)));
-			
+
 			if (ClearCycleImage9)
 				tile.Add(new XElement(wp + "CycleImage9", new XAttribute("Action", "Clear")));
             else if (!string.IsNullOrEmpty(CycleImage9))
