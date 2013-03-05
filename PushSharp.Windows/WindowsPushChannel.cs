@@ -107,6 +107,9 @@ namespace PushSharp.Windows
 			request.Headers.Add("Authorization", string.Format("Bearer {0}", this.AccessToken));
 			request.ContentType = "text/xml";
 
+			if (winNotification.Type == WindowsNotificationType.Raw)
+				request.ContentType = "application/octet-stream";
+
 			if (winNotification.Type == WindowsNotificationType.Tile)
 			{
 				var winTileNot = winNotification as WindowsTileNotification;
@@ -151,7 +154,7 @@ namespace PushSharp.Windows
 			request.ServicePoint.Expect100Continue = false;
 
 			var payload = winNotification.PayloadToString();
-			var data = Encoding.Default.GetBytes(payload);
+			var data = Encoding.UTF8.GetBytes(payload);
 
 			request.ContentLength = data.Length;
 
