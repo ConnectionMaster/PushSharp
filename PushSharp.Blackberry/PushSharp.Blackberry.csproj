@@ -55,12 +55,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PushSharp.Common\PushSharp.Core.csproj">
-      <Project>{836F225F-6CD9-48DE-910C-70F8A7CF54AA}</Project>
-      <Name>PushSharp.Core</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="PushSharp-Signing.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
