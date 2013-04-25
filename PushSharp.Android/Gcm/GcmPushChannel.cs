@@ -36,7 +36,7 @@ namespace PushSharp.Android
 			var result = new GcmMessageTransportResponse();
 			result.Message = msg;
 
-			var postData = msg.GetJson();
+			//var postData = msg.GetJson();
 
 			var webReq = (HttpWebRequest)WebRequest.Create(gcmSettings.GcmUrl);
 			//webReq.ContentLength = postData.Length;
@@ -233,7 +233,7 @@ namespace PushSharp.Android
 					if (singleResultNotification.RegistrationIds != null && singleResultNotification.RegistrationIds.Count > 0)
 						oldRegistrationId = singleResultNotification.RegistrationIds[0];
 
-					asyncParam.Callback(this, new SendNotificationResult(singleResultNotification, false, new DeviceSubscriptonExpiredException()) { OldSubscriptionId = oldRegistrationId, NewSubscriptionId = newRegistrationId });
+					asyncParam.Callback(this, new SendNotificationResult(singleResultNotification, false, new DeviceSubscriptonExpiredException()) { OldSubscriptionId = oldRegistrationId, NewSubscriptionId = newRegistrationId, IsSubscriptionExpired = true });
 				}
 				else if (r.ResponseStatus == GcmMessageTransportResponseStatus.Unavailable)
 				{
@@ -241,8 +241,13 @@ namespace PushSharp.Android
 				}
 				else if (r.ResponseStatus == GcmMessageTransportResponseStatus.NotRegistered)
 				{
+					var oldRegistrationId = string.Empty;
+
+					if (singleResultNotification.RegistrationIds != null && singleResultNotification.RegistrationIds.Count > 0)
+						oldRegistrationId = singleResultNotification.RegistrationIds[0];
+
 					//Raise failure and device expired
-					asyncParam.Callback(this, new SendNotificationResult(singleResultNotification, false, new DeviceSubscriptonExpiredException()));
+					asyncParam.Callback(this, new SendNotificationResult(singleResultNotification, false, new DeviceSubscriptonExpiredException()) { OldSubscriptionId = oldRegistrationId, IsSubscriptionExpired = true, SubscriptionExpiryUtc = DateTime.UtcNow });
 				}
 				else
 				{

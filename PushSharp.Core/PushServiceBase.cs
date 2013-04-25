@@ -12,6 +12,7 @@ namespace PushSharp.Core
 	public delegate void ChannelDestroyedDelegate(object sender);
 	public delegate void NotificationSentDelegate(object sender, INotification notification);
 	public delegate void NotificationFailedDelegate(object sender, INotification notification, Exception error);
+	public delegate void NotificationRequeueDelegate(object sender, NotificationRequeueEventArgs e);
 	public delegate void ChannelExceptionDelegate(object sender, IPushChannel pushChannel, Exception error);
 	public delegate void ServiceExceptionDelegate(object sender, Exception error);
 	public delegate void DeviceSubscriptionExpiredDelegate(object sender, string expiredSubscriptionId, DateTime expirationDateUtc, INotification notification);
@@ -23,6 +24,7 @@ namespace PushSharp.Core
 		public event ChannelDestroyedDelegate OnChannelDestroyed;
 		public event NotificationSentDelegate OnNotificationSent;
 		public event NotificationFailedDelegate OnNotificationFailed;
+		public event NotificationRequeueDelegate OnNotificationRequeue;
 		public event ChannelExceptionDelegate OnChannelException;
 		public event ServiceExceptionDelegate OnServiceException;
 		public event DeviceSubscriptionExpiredDelegate OnDeviceSubscriptionExpired;
@@ -57,7 +59,6 @@ namespace PushSharp.Core
 		}
 
 		private Timer timerCheckScale;
-		private Task distributerTask;
 		private volatile bool stopping;
 		private List<ChannelWorker> channels = new List<ChannelWorker>();
 		private ConcurrentQueue<INotification> queuedNotifications;
@@ -66,7 +67,6 @@ namespace PushSharp.Core
 
 		private long trackedNotificationCount = 0;
 
-		ManualResetEvent waitFreeChannel = new ManualResetEvent(true);
 		ManualResetEvent waitQueuedNotifications = new ManualResetEvent(false);
 
 		protected PushServiceBase(IPushChannelFactory pushChannelFactory, IPushChannelSettings channelSettings)
@@ -315,8 +315,12 @@ namespace PushSharp.Core
 				}
 
 				var msWaited = (DateTime.UtcNow - notification.EnqueuedTimestamp).TotalMilliseconds;
-				measurements.Add(new WaitTimeMeasurement((long) msWaited));
-				
+
+				lock (measurements)
+				{
+					measurements.Add(new WaitTimeMeasurement((long) msWaited));
+				}
+
 				channel.SendNotification(notification, (sender, result) =>
 					{
 						//Trigger 
@@ -327,22 +331,45 @@ namespace PushSharp.Core
 
 						//Handle the notification send callback here
 						if (result.ShouldRequeue)
-							this.QueueNotification(result.Notification, result.CountsAsRequeue, true);
+						{
+							var eventArgs = new NotificationRequeueEventArgs(result.Notification);
+							var evt = this.OnNotificationRequeue;
+							if (evt != null)
+								evt(this, eventArgs);
+
+							//See if the requeue was cancelled in the event args
+							if (!eventArgs.Cancel)
+								this.QueueNotification(result.Notification, result.CountsAsRequeue, true);
+						}
 						else
 						{
-							//This is a fairly special case that only GCM should really ever raise
-							if (!string.IsNullOrEmpty(result.NewSubscriptionId) && !string.IsNullOrEmpty(result.OldSubscriptionId))
-							{
-								var evt = this.OnDeviceSubscriptionChanged;
-								if (evt != null)
-									evt(this, result.OldSubscriptionId, result.NewSubscriptionId, result.Notification);
-							}
-
+							//Result was a success, but there are still more possible outcomes than an outright success
 							if (!result.IsSuccess)
 							{
-								var evt = this.OnNotificationFailed;
-								if (evt != null)
-									evt(this, result.Notification, result.Error);
+								//Check if the subscription was expired
+								if (result.IsSubscriptionExpired)
+								{
+									//If there is a new id, the subscription must have changed
+									//This is a fairly special case that only GCM should really ever raise
+									if (!string.IsNullOrEmpty(result.NewSubscriptionId))
+									{
+										var evt = this.OnDeviceSubscriptionChanged;
+										if (evt != null)
+											evt(this, result.OldSubscriptionId, result.NewSubscriptionId, result.Notification);
+									}
+									else
+									{
+										var evt = this.OnDeviceSubscriptionExpired;
+										if (evt != null)
+											evt(this, result.OldSubscriptionId, result.SubscriptionExpiryUtc, result.Notification);
+									}
+								}
+								else //Otherwise some general failure
+								{
+									var evt = this.OnNotificationFailed;
+									if (evt != null)
+										evt(this, result.Notification, result.Error);
+								}
 							}
 							else
 							{
@@ -406,5 +433,17 @@ namespace PushSharp.Core
 	{
 		Create,
 		Destroy
+	}
+
+	public class NotificationRequeueEventArgs : EventArgs
+	{
+		public NotificationRequeueEventArgs(INotification notification) 
+		{
+			this.Cancel = false;
+			this.Notification = notification;
+		}
+
+		public bool Cancel { get;set; }
+		public INotification Notification { get; private set; }
 	}
 }

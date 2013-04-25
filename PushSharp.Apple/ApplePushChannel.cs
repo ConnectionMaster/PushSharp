@@ -76,7 +76,6 @@ namespace PushSharp.Apple
 		object sentLock = new object();
 		object connectLock = new object();
 		object streamWriteLock = new object();
-		object cleanupLock = new object();
 		int reconnectDelay = 3000;
 		float reconnectBackoffMultiplier = 1.5f;
 
@@ -216,7 +215,7 @@ namespace PushSharp.Apple
 		{
 			try
 			{
-				var result = networkStream.BeginRead(readBuffer, 0, 6, new AsyncCallback((asyncResult) =>
+				networkStream.BeginRead(readBuffer, 0, 6, new AsyncCallback((asyncResult) =>
 				{
 					lock (sentLock)
 					{
@@ -316,7 +315,16 @@ namespace PushSharp.Apple
 			while (true)
 			{
 				lock(connectLock)
-					Connect();
+				{
+					//Connect could technically fail
+					try { Connect(); }
+					catch (Exception ex) 
+					{
+						var evt = this.OnException;
+						if (evt != null)
+							evt(this, ex);
+					}
+				}
 
 				bool wasRemoved = false;
 

@@ -14,6 +14,12 @@ namespace PushSharp
 			return n;
 		}
 
+        public static GcmNotification ForDeviceRegistrationId(this GcmNotification n, IEnumerable<string> deviceRegistrationIds)
+        {
+            n.RegistrationIds.AddRange(deviceRegistrationIds);
+            return n;
+        }
+
 		public static GcmNotification WithCollapseKey(this GcmNotification n, string collapseKey)
 		{
 			n.CollapseKey = collapseKey;
@@ -34,7 +40,7 @@ namespace PushSharp
 
 		public static GcmNotification WithJson(this GcmNotification n, string json)
 		{
-			try { var nobj = Newtonsoft.Json.Linq.JObject.Parse(json); }
+			try { Newtonsoft.Json.Linq.JObject.Parse(json); }
 			catch { throw new InvalidCastException("Invalid JSON detected!"); }
 
 			n.JsonData = json;
