@@ -58,16 +58,21 @@ namespace PushSharp.Core
 			get { return stopping; }
 		}
 
-		private Timer timerCheckScale;
-		private int scaleSync;
-		private volatile bool stopping;
-		private List<ChannelWorker> channels = new List<ChannelWorker>();
-		private ConcurrentQueue<INotification> queuedNotifications;
-		private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-		private List<WaitTimeMeasurement> measurements = new List<WaitTimeMeasurement>();
-        private List<WaitTimeMeasurement> sendTimeMeasurements = new List<WaitTimeMeasurement>();
+		Timer timerCheckScale;
+		int scaleSync;
+		volatile bool stopping;
+		List<ChannelWorker> channels = new List<ChannelWorker>();
+		NotificationQueue queuedNotifications;
+		CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+		List<WaitTimeMeasurement> measurements = new List<WaitTimeMeasurement>();
+        List<WaitTimeMeasurement> sendTimeMeasurements = new List<WaitTimeMeasurement>();
+		DateTime lastNotificationQueueTime = DateTime.MinValue;
+		long trackedNotificationCount = 0;
 
-		private long trackedNotificationCount = 0;
+		readonly object measurementsLock = new object();
+		readonly object sendTimeMeasurementsLock = new object();
+		readonly object channelsLock = new object();
+		readonly object queuedNotificationsLock = new object();
 
 		ManualResetEvent waitQueuedNotifications = new ManualResetEvent(false);
 
@@ -83,7 +88,7 @@ namespace PushSharp.Core
 			this.ServiceSettings = serviceSettings ?? new PushServiceSettings();
 			this.ChannelSettings = channelSettings;
 
-			this.queuedNotifications = new ConcurrentQueue<INotification>();
+			this.queuedNotifications = new NotificationQueue();
 
 			scaleSync = 0;
 
@@ -101,8 +106,10 @@ namespace PushSharp.Core
 
 
 		private void QueueNotification(INotification notification, bool countsAsRequeue = true,
-		                               bool ignoreStoppingChannel = false)
+		                               bool ignoreStoppingChannel = false, bool queueToFront = false)
 		{
+			lastNotificationQueueTime = DateTime.UtcNow;
+
 			Interlocked.Increment(ref trackedNotificationCount);
 
 			//Measure when the message entered the queue
@@ -121,7 +128,10 @@ namespace PushSharp.Core
 				if (countsAsRequeue)
 					notification.QueuedCount++;
 
-				queuedNotifications.Enqueue(notification);
+				if (queueToFront)
+					queuedNotifications.EnqueueAtStart(notification);
+				else
+					queuedNotifications.Enqueue(notification);
 
 				//Allow anything waiting on a queued notification to continue faster
 				waitQueuedNotifications.Set();
@@ -196,10 +206,25 @@ namespace PushSharp.Core
 
 					if (ServiceSettings.AutoScaleChannels && !this.cancelTokenSource.IsCancellationRequested)
 					{
-						if (channels.Count <= 0)
+						if (channels.Count <= 0 && QueueLength > 0)
 						{
 							Log.Info("{0} -> Creating Channel {1}", this, channels.Count);
 							ScaleChannels(ChannelScaleAction.Create);
+							return;
+						}
+
+						//Check to see if the Idle timeout is being used.  If so, we want to destroy all the channels if we're in idle mode
+						// Only do this if we haven't sent in a long time (greater than the IdleTimeout) and we have nothing in the queue
+						// and we have no tracked notification count
+						if (ServiceSettings.IdleTimeout > TimeSpan.Zero && 
+						    channels.Count > 0 && QueueLength <= 0 
+						    && (DateTime.UtcNow - lastNotificationQueueTime) > ServiceSettings.IdleTimeout
+						    && Interlocked.Read(ref trackedNotificationCount) <= 0)
+						{
+							Log.Info("{0} -> Service Idle, Destroying all Channels", this, channels.Count);
+							while (channels.Count > 0 && !this.cancelTokenSource.IsCancellationRequested)
+								ScaleChannels(ChannelScaleAction.Destroy);
+
 							return;
 						}
 
@@ -244,6 +269,21 @@ namespace PushSharp.Core
 					}
 					else
 					{
+						//Check to see if the Idle timeout is being used.  If so, we want to destroy all the channels if we're in idle mode
+						// Only do this if we haven't sent in a long time (greater than the IdleTimeout) and we have nothing in the queue
+						// and we have no tracked notification count
+						if (ServiceSettings.IdleTimeout > TimeSpan.Zero && 
+						    channels.Count > 0 && QueueLength <= 0 
+						    && (DateTime.UtcNow - lastNotificationQueueTime) > ServiceSettings.IdleTimeout
+						    && Interlocked.Read(ref trackedNotificationCount) <= 0)
+						{
+							Log.Info("{0} -> Service Idle, Destroying all Channels", this, channels.Count);
+							while (channels.Count > 0 && !this.cancelTokenSource.IsCancellationRequested)
+								ScaleChannels(ChannelScaleAction.Destroy);
+
+							return;
+						}
+
 						while (channels.Count > ServiceSettings.Channels && !this.cancelTokenSource.IsCancellationRequested)
 						{
 							Log.Info("{0} -> Destroying Channel", this);
@@ -271,7 +311,7 @@ namespace PushSharp.Core
 				if (measurements == null || measurements.Count <= 0)
 					return TimeSpan.Zero;
 
-				lock (measurements)
+				lock (measurementsLock)
 				{
 					//Remove old measurements
                     while (measurements.Count > 1000)
@@ -297,7 +337,7 @@ namespace PushSharp.Core
 				if (sendTimeMeasurements == null || sendTimeMeasurements.Count <= 0)
 					return TimeSpan.Zero;
 
-                lock (sendTimeMeasurements)
+                lock (sendTimeMeasurementsLock)
                 {
                     while (sendTimeMeasurements.Count > 1000)
                         sendTimeMeasurements.RemoveAt(0);
@@ -316,7 +356,7 @@ namespace PushSharp.Core
 	    {
 	        get
 	        {
-	            lock (queuedNotifications)
+	            lock (queuedNotificationsLock)
 	                return queuedNotifications.Count;
 	        }
 	    }
@@ -325,7 +365,7 @@ namespace PushSharp.Core
 	    {
 	        get
 	        {
-	            lock (channels)
+	            lock (channelsLock)
 	                return channels.Count;
 	        }
 	    }
@@ -344,7 +384,7 @@ namespace PushSharp.Core
 				bool? destroyed = null;
 				IPushChannel newChannel = default(IPushChannel);
 
-				lock (channels)
+				lock (channelsLock)
 				{
 					if (action == ChannelScaleAction.Create)
 					{
@@ -362,7 +402,7 @@ namespace PushSharp.Core
 						newCount = channels.Count;
 						destroyed = false;
 					}
-					else if (action == ChannelScaleAction.Destroy && channels.Count > 1)
+					else if (action == ChannelScaleAction.Destroy && channels.Count > 0)
 					{
 						var channelOn = channels[0];
 						channels.RemoveAt(0);
@@ -403,9 +443,9 @@ namespace PushSharp.Core
 			{
 				var waitForNotification = new ManualResetEvent(false);
 
-				INotification notification;
+				var notification = queuedNotifications.Dequeue ();
 
-				if (!queuedNotifications.TryDequeue(out notification))
+				if (notification == null)
 				{
 					Thread.Sleep(100);
 					continue;
@@ -413,7 +453,7 @@ namespace PushSharp.Core
 
 				var msWaited = (DateTime.UtcNow - notification.EnqueuedTimestamp).TotalMilliseconds;
 
-				lock (measurements)
+				lock (measurementsLock)
 				{
 					measurements.Add(new WaitTimeMeasurement((long) msWaited));
 				}
@@ -435,7 +475,7 @@ namespace PushSharp.Core
                         
 						var sendTime = DateTime.UtcNow - sendStart;
 
-                        lock (sendTimeMeasurements)
+                        lock (sendTimeMeasurementsLock)
                         {
                             sendTimeMeasurements.Add(new WaitTimeMeasurement((long)sendTime.TotalMilliseconds));
                         }
@@ -456,7 +496,7 @@ namespace PushSharp.Core
 
 							//See if the requeue was cancelled in the event args
 							if (!eventArgs.Cancel)
-								this.QueueNotification(result.Notification, result.CountsAsRequeue, true);
+								this.QueueNotification(result.Notification, result.CountsAsRequeue, true, true);
 						}
 						else
 						{

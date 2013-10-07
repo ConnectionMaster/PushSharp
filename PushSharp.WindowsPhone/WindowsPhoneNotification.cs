@@ -95,7 +95,8 @@ namespace PushSharp.WindowsPhone
 
 		protected string XmlEncode(string text)
 		{
-			return System.Security.SecurityElement.Escape(text);
+			return text;
+			//return System.Security.SecurityElement.Escape(text);
 		}
 
         public override bool IsValidDeviceRegistrationId()
