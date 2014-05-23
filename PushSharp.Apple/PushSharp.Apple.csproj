@@ -40,9 +40,6 @@
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Newtonsoft.Json\net40\Newtonsoft.Json.dll</HintPath>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -76,7 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PushSharp.Core\PushSharp.Core.csproj">
-      <Project>{836F225F-6CD9-48DE-910C-70F8A7CF54AA}</Project>
+      <Project>{EB8D79BE-FBFF-4A53-868F-9101EEDC7D3A}</Project>
       <Name>PushSharp.Core</Name>
     </ProjectReference>
   </ItemGroup>

@@ -77,7 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PushSharp.Core\PushSharp.Core.csproj">
-      <Project>{836F225F-6CD9-48DE-910C-70F8A7CF54AA}</Project>
+      <Project>{EB8D79BE-FBFF-4A53-868F-9101EEDC7D3A}</Project>
       <Name>PushSharp.Core</Name>
     </ProjectReference>
   </ItemGroup>
